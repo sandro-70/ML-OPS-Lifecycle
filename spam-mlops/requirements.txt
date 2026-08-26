@@ -6,3 +6,4 @@ fastapi
 uvicorn
 pytest
 httpx
+evidently==0.4.33

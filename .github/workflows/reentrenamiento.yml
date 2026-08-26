@@ -1,0 +1,52 @@
+name: Reentrenamiento Automático (Demo MLOps)
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Cada domingo a la medianoche
+  workflow_dispatch:      # Permite ejecución manual
+
+jobs:
+  monitorear_y_reentrenar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spam-mlops
+    
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: spam-mlops/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      # NOTA DEMOSTRATIVA:
+      # En este pipeline local, mlflow.db esta en .gitignore y no se trackea,
+      # por lo cual el runner arranca sin versiones registradas en MLflow local.
+      # Para que este workflow funcione en la vida real, se necesita configurar:
+      # 1. Un tracking server remoto (ej. MLFLOW_TRACKING_URI=http://...)
+      # 2. Las credenciales de un remote de DVC (para jalar spam_limpio.csv real)
+      # 
+      # Aqui corremos monitorear de forma ilustrativa. Si detecta drift
+      # (exit code 1), continuamos al siguiente paso.
+
+      - name: Monitorear Data Drift
+        id: monitoreo
+        continue-on-error: true
+        run: python src/monitorear.py
+
+      - name: Reentrenamiento condicional
+        if: steps.monitoreo.outcome == 'failure'
+        run: |
+          echo "Drift detectado en el paso anterior. Iniciando reentrenamiento condicional..."
+          # Aqui correriamos python src/reentrenar.py
+          # Pero debido a que MLflow es local, fallara al buscar la produccion.
+          # Dejamos el comando comentado como documentacion del proceso.
+          # python src/reentrenar.py
+          echo "Ejecucion completada (simulada)."
