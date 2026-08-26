@@ -18,11 +18,30 @@ RUTA_RAW = "data/raw/spam_limpio.csv"
 RUTA_NUEVOS = "data/nuevos/spam_moderno.csv"
 MODEL_NAME = "spam-detector"
 ALIAS_PROD = "produccion"
+F1_MINIMO = 0.5  # calidad minima absoluta (clase "spam") para poder desplegar
 
 def cargar_datos():
     df_raw = pd.read_csv(RUTA_RAW)
     df_nuevos = pd.read_csv(RUTA_NUEVOS)
+
+    # data/raw/spam_limpio.csv (dataset v2, versionado con DVC) ya
+    # trae los mensajes modernos anexados, pero quedaron en la
+    # columna "etiqueta" en vez de "tipo" porque el anexado no
+    # unifico nombres de columna: los 5169 mensajes clasicos solo
+    # tienen "tipo", los 244 modernos solo tienen "etiqueta". Sin
+    # este fillna, dropna(subset=['etiqueta']) descartaba los 5169
+    # clasicos y el "reentrenamiento" terminaba entrenando (y
+    # evaluando) solo con los mensajes modernos duplicados dos veces
+    # (una vez desde aqui, otra desde RUTA_NUEVOS) -de ahi el F1
+    # perfecto que no significaba nada.
+    df_raw["tipo"] = df_raw["tipo"].fillna(df_raw["etiqueta"])
+    df_raw = df_raw[["tipo", "mensaje"]].rename(columns={"tipo": "etiqueta"})
+
     df = pd.concat([df_raw, df_nuevos], ignore_index=True)
+    # Los 244 modernos aparecen en ambas fuentes (ya anexados en
+    # RUTA_RAW y otra vez en RUTA_NUEVOS): sin deduplicar por
+    # mensaje, quedarian contados doble.
+    df = df.drop_duplicates(subset=["mensaje"])
     df.dropna(subset=['mensaje', 'etiqueta'], inplace=True)
     return train_test_split(df["mensaje"], df["etiqueta"], test_size=0.2, random_state=42, stratify=df["etiqueta"])
 
@@ -72,10 +91,11 @@ def main():
     print("-"*40)
     print(f"Producción actual : {f1_prod_spam:.4f}")
     print(f"Candidato nuevo   : {f1_cand_spam:.4f}")
+    print(f"Mínimo requerido  : {F1_MINIMO:.4f}")
     print("-"*40)
-    
-    if f1_cand_spam > f1_prod_spam:
-        print("\n¡El modelo candidato supera al modelo de producción!")
+
+    if f1_cand_spam > f1_prod_spam and f1_cand_spam >= F1_MINIMO:
+        print("\n¡El modelo candidato supera al modelo de producción y la calidad mínima!")
         print("Registrando y promoviendo la nueva versión...")
         
         with mlflow.start_run(run_name="reentrenamiento-automatico"):
@@ -93,7 +113,10 @@ def main():
             client.set_registered_model_alias(MODEL_NAME, ALIAS_PROD, version_nueva)
             print(f"La versión {version_nueva} es ahora el nuevo alias '{ALIAS_PROD}'.")
     else:
-        print("\nEl modelo candidato NO supera al modelo actual.")
+        if f1_cand_spam <= f1_prod_spam:
+            print("\nEl modelo candidato NO supera al modelo actual.")
+        else:
+            print(f"\nEl modelo candidato no alcanza la calidad mínima requerida ({F1_MINIMO:.4f}).")
         print("Se descarta el candidato. No se promueve nada.")
     
     print("="*60)
