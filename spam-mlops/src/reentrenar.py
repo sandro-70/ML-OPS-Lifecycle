@@ -18,7 +18,7 @@ RUTA_RAW = "data/raw/spam_limpio.csv"
 RUTA_NUEVOS = "data/nuevos/spam_moderno.csv"
 MODEL_NAME = "spam-detector"
 ALIAS_PROD = "produccion"
-F1_MINIMO = 0.5  # calidad minima absoluta (clase "spam") para poder desplegar
+F1_MINIMO = 0.99  # calidad minima absoluta (clase "spam") para poder desplegar
 
 def cargar_datos():
     df_raw = pd.read_csv(RUTA_RAW)
