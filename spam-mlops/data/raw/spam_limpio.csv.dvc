@@ -1,0 +1,5 @@
+outs:
+- md5: 3b3d77c9e009347f00eaaa2867347896
+  size: 443688
+  hash: md5
+  path: spam_limpio.csv
