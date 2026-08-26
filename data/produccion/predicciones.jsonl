@@ -1,0 +1,6 @@
+{"timestamp_utc": "2026-08-26T16:21:57.285078+00:00", "mensaje": "Hey, are we still meeting at 5?", "prediccion": "ham", "probabilidad_spam": 0.002256989901642994, "version_modelo": "prueba"}
+{"timestamp_utc": "2026-08-26T16:21:57.321648+00:00", "mensaje": "Hey, are we still meeting at 5?", "prediccion": "ham", "probabilidad_spam": 0.002256989901642994, "version_modelo": "prueba"}
+{"timestamp_utc": "2026-08-26T16:21:57.321692+00:00", "mensaje": "WINNER!! Claim your FREE prize now call 09061701461", "prediccion": "spam", "probabilidad_spam": 0.9983922394226314, "version_modelo": "prueba"}
+{"timestamp_utc": "2026-08-26T16:25:00.671752+00:00", "mensaje": "Hey, are we still meeting at 5?", "prediccion": "ham", "probabilidad_spam": 0.002256989901642994, "version_modelo": "prueba"}
+{"timestamp_utc": "2026-08-26T16:25:00.699998+00:00", "mensaje": "Hey, are we still meeting at 5?", "prediccion": "ham", "probabilidad_spam": 0.002256989901642994, "version_modelo": "prueba"}
+{"timestamp_utc": "2026-08-26T16:25:00.700051+00:00", "mensaje": "WINNER!! Claim your FREE prize now call 09061701461", "prediccion": "spam", "probabilidad_spam": 0.9983922394226314, "version_modelo": "prueba"}

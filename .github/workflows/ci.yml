@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    # El proyecto real vive en spam-mlops/ (requirements.txt,
+    # pytest.ini, Dockerfile, src/), no en la raiz del repo. Fijarlo
+    # aqui evita repetir "cd spam-mlops &&" en cada paso.
+    defaults:
+      run:
+        working-directory: spam-mlops
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: spam-mlops/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar pruebas
+        # requiere_modelo queda fuera porque mlflow.db y mlruns/ estan
+        # en .gitignore: en este runner no existe el registro real de
+        # MLflow, asi que esas pruebas (que validan el registro real
+        # end-to-end, sin fallback) no tienen nada que validar aqui.
+        # El resto -comportamiento, contrato y calidad- corre igual,
+        # entrenando al vuelo sobre tests/fixtures/muestra_spam.csv
+        # (ver conftest.py y tests/test_modelo.py).
+        run: pytest -v -m "not requiere_modelo"
+
+      - name: Construir imagen Docker
+        # Solo valida que la imagen compile (dependencias instalables,
+        # Dockerfile sin errores); no se publica a ningun registry.
+        run: docker build -t spam-detector-api .
