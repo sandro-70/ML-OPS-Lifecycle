@@ -118,7 +118,9 @@ def main():
         else:
             print(f"\nEl modelo candidato no alcanza la calidad mínima requerida ({F1_MINIMO:.4f}).")
         print("Se descarta el candidato. No se promueve nada.")
-    
+        print("="*60)
+        sys.exit(1)
+
     print("="*60)
 
 if __name__ == "__main__":

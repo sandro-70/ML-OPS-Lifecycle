@@ -24,7 +24,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
@@ -43,6 +43,7 @@ RUTA_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "muestra_spam.csv"
 EXACTITUD_MINIMA = 0.95
 PRECISION_SPAM_MINIMA = 0.90
 RECALL_SPAM_MINIMO = 0.80
+F1_SPAM_MINIMO = 0.99 # el mismo gate que reentrenar.py exige antes de promover un candidato
 VENTAJA_MINIMA_SOBRE_TRIVIAL = 0.05  # puntos de accuracy sobre "siempre ham"
 
 MENSAJES_SPAM_OBVIO = [
@@ -117,6 +118,9 @@ def metricas(contexto_modelo):
             contexto_modelo.y_eval, y_pred, pos_label="spam", zero_division=0
         ),
         "recall_spam": recall_score(
+            contexto_modelo.y_eval, y_pred, pos_label="spam", zero_division=0
+        ),
+        "f1_spam": f1_score(
             contexto_modelo.y_eval, y_pred, pos_label="spam", zero_division=0
         ),
     }
@@ -227,6 +231,10 @@ def test_precision_spam_minima(metricas):
 
 def test_recall_spam_minimo(metricas):
     assert metricas["recall_spam"] >= RECALL_SPAM_MINIMO
+
+
+def test_f1_spam_minimo(metricas):
+    assert metricas["f1_spam"] >= F1_SPAM_MINIMO
 
 
 def test_supera_al_clasificador_trivial(contexto_modelo, metricas):
